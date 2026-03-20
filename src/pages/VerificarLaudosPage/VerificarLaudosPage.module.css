@@ -1,0 +1,160 @@
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--grey-800);
+  margin-bottom: 2px;
+}
+
+.sub {
+  font-size: 0.8125rem;
+  color: var(--grey-500);
+}
+
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.column {
+  background: var(--grey-100);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.colHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--grey-200);
+  border-bottom: 1px solid var(--grey-300);
+}
+
+.colTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--grey-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.colCount {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--grey-400);
+  color: var(--white);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.colBody {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 80px;
+}
+
+.empty {
+  font-size: 0.78rem;
+  color: var(--grey-400);
+  text-align: center;
+  padding: 16px;
+}
+
+.kanbanCard {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.cardNum {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: monospace;
+}
+
+.cardPatient {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  margin-bottom: 2px;
+}
+
+.cardProcess {
+  font-size: 0.75rem;
+  color: var(--grey-500);
+  margin-bottom: 4px;
+}
+
+.cardDate {
+  font-size: 0.72rem;
+  color: var(--grey-400);
+  margin-bottom: 8px;
+}
+
+.cardActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.viewBtn {
+  width: 100%;
+  padding: 5px;
+  background: transparent;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  color: var(--grey-600);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.viewBtn:hover { background: var(--grey-100); }
+
+.advanceBtn {
+  width: 100%;
+  padding: 5px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--white);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.advanceBtn:hover { background: var(--primary-dark); }
+
+.revertBtn {
+  width: 100%;
+  padding: 5px;
+  background: transparent;
+  border: 1px solid var(--grey-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--grey-500);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.revertBtn:hover { background: var(--grey-100); color: var(--grey-700); }

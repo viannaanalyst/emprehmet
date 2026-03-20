@@ -1,0 +1,13 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--topbar-height);
+  flex: 1;
+  padding: 28px 32px;
+  min-height: calc(100vh - var(--topbar-height));
+  background: var(--grey-50);
+}

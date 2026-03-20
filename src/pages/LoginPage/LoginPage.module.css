@@ -1,0 +1,111 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  padding: 20px;
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.brandSection {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.logo {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--primary-lighter);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.appName {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--grey-800);
+  margin-bottom: 4px;
+}
+
+.appDesc {
+  font-size: 0.8125rem;
+  color: var(--grey-500);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--grey-700);
+}
+
+.input {
+  padding: 10px 14px;
+  border: 1px solid var(--grey-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  color: var(--grey-800);
+}
+
+.input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.error {
+  font-size: 0.8125rem;
+  color: var(--danger);
+  background: var(--danger-light);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.submit {
+  padding: 11px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.15s;
+}
+
+.submit:hover:not(:disabled) { background: var(--primary-dark); }
+.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.hint {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--grey-400);
+  margin-top: 20px;
+}

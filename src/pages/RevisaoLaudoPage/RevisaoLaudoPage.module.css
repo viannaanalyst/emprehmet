@@ -1,0 +1,256 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ─── Top bar ─── */
+.topBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.topLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--grey-600);
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+.backBtn:hover { background: var(--grey-100); }
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--grey-800);
+}
+
+.sub {
+  font-size: 0.8125rem;
+  color: var(--grey-500);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.saveMsg {
+  font-size: 0.8125rem;
+  color: var(--success);
+  font-weight: 500;
+}
+
+.wordBtn {
+  border-color: var(--grey-300) !important;
+}
+
+/* ─── Layout ─── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ─── Sidebar ─── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.infoCard {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.cardTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--grey-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 5px 10px;
+  font-size: 0.8125rem;
+}
+
+.dl dt {
+  color: var(--grey-500);
+  white-space: nowrap;
+}
+
+.dl dd {
+  color: var(--grey-800);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Conditions list */
+.condList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.condList li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.8125rem;
+  color: var(--grey-700);
+}
+
+.cid {
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--primary-lighter);
+  color: var(--primary);
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* CRM field */
+.crmHint {
+  font-size: 0.78rem;
+  color: var(--grey-500);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.crmField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.crmLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--grey-600);
+}
+
+.crmInput {
+  padding: 7px 10px;
+  border: 1px solid var(--grey-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--grey-800);
+  outline: none;
+  width: 100%;
+}
+
+.crmInput:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+.crmInput:read-only {
+  background: var(--grey-50);
+  color: var(--grey-500);
+  cursor: default;
+}
+
+.crmSaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: var(--success);
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+/* Signature preview */
+.signaturePreview {
+  background: var(--grey-50);
+  border: 1px dashed var(--grey-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--grey-600);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.signaturePreview p { margin: 0; }
+.signaturePreview strong { color: var(--grey-800); }
+.signaturePreview em { font-size: 0.68rem; }
+
+/* ─── Editor ─── */
+.editorWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.editorLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--grey-700);
+}
+
+.editorHint {
+  font-size: 0.75rem;
+  color: var(--grey-400);
+}
+
+/* ─── Not found ─── */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--grey-500);
+}

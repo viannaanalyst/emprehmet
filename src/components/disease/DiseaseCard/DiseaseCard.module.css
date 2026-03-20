@@ -1,0 +1,76 @@
+.card {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.card.added {
+  border-color: var(--success);
+  background: var(--success-light);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.code {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--primary-lighter);
+  color: var(--primary);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.category {
+  font-size: 0.72rem;
+  color: var(--grey-500);
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  margin-bottom: 4px;
+}
+
+.preview {
+  font-size: 0.78rem;
+  color: var(--grey-500);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: var(--primary);
+  color: var(--white);
+  transition: background 0.15s;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.addedBtn {
+  background: var(--success);
+  cursor: default;
+}

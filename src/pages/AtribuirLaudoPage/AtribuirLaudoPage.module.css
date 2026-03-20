@@ -1,0 +1,57 @@
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--grey-800);
+  margin-bottom: 2px;
+}
+
+.sub {
+  font-size: 0.8125rem;
+  color: var(--grey-500);
+}
+
+.successMsg {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--success-light);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+
+.successIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--success);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.successTitle {
+  font-size: 0.9375rem;
+  color: var(--grey-800);
+  margin-bottom: 2px;
+}
+
+.successStatus {
+  font-size: 0.8125rem;
+  color: var(--grey-600);
+}
+
+.successActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--grey-200);
+}

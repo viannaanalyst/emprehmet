@@ -1,0 +1,53 @@
+.card {
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-light);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: monospace;
+}
+
+.patient {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--grey-800);
+  margin-bottom: 2px;
+}
+
+.processo {
+  font-size: 0.78rem;
+  color: var(--grey-500);
+  margin-bottom: 8px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--grey-100);
+}
+
+.meta {
+  font-size: 0.78rem;
+  color: var(--grey-400);
+}
