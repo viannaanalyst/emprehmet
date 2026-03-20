@@ -5,60 +5,267 @@
   right: 0;
   height: var(--topbar-height);
   background: var(--white);
-  border-bottom: 1px solid var(--grey-200);
   display: flex;
   align-items: center;
   padding: 0 24px;
   z-index: 99;
-  box-shadow: var(--shadow-sm);
+  transition: left 0.3s ease;
+}
+
+.topbar.collapsed {
+  left: var(--sidebar-collapsed-width);
 }
 
 .spacer {
   flex: 1;
 }
 
-.user {
+.userButton {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.userButton:hover {
+  background: var(--grey-100);
+  border-color: var(--grey-200);
+}
+
+.userButton:active {
+  transform: scale(0.98);
 }
 
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.userButton:hover .avatar {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-color: var(--grey-200);
 }
 
 .userName {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--grey-700);
+  transition: color 0.2s ease;
 }
 
-.logoutBtn {
+.userButton:hover .userName {
+  color: var(--grey-900);
+}
+
+.dotsIcon {
+  color: var(--grey-500);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.userButton:hover .dotsIcon {
+  color: var(--grey-700);
+  transform: rotate(90deg);
+}
+
+.dropdownContent {
+  width: 280px;
+  background: white !important;
+  border: 1px solid var(--grey-200) !important;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  transform-origin: top right;
+  animation: dropdownEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}
+
+@keyframes dropdownEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdownContent[data-state="closed"] {
+  animation: dropdownExit 0.2s ease-out forwards;
+}
+
+@keyframes dropdownExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+.dropdownLabel {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.dropdownHeader {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid var(--grey-200);
-  background: transparent;
-  border-radius: var(--radius-sm);
-  color: var(--grey-600);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-  margin-left: 8px;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: background 0.2s ease;
 }
 
-.logoutBtn:hover {
-  background: var(--grey-100);
+.dropdownHeader:hover {
+  background: var(--grey-50);
+}
+
+.dropdownAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb, 37, 99, 235), 0.3);
+  transition: transform 0.2s ease;
+}
+
+.dropdownHeader:hover .dropdownAvatar {
+  transform: scale(1.05);
+}
+
+.dropdownInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+
+.dropdownName {
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--grey-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.dropdownHeader:hover .dropdownName {
+  color: var(--grey-900);
+}
+
+.dropdownRole {
+  font-size: 0.8rem;
+  color: var(--grey-500);
+  transition: color 0.2s ease;
+}
+
+.dropdownHeader:hover .dropdownRole {
+  color: var(--grey-600);
+}
+
+.dropdownItem {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px !important;
+  background: transparent !important;
+  border: none;
+  color: var(--grey-700);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  opacity: 1 !important;
+}
+
+.dropdownItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+
+.dropdownItem:hover {
+  background: var(--grey-100) !important;
+  color: var(--grey-900);
+  transform: translateX(4px);
+}
+
+.dropdownItem:hover::before {
+  transform: scaleY(1);
+}
+
+.dropdownItem:active {
+  transform: translateX(4px) scale(0.98);
+}
+
+.dropdownItem svg {
+  color: var(--grey-500);
+  flex-shrink: 0;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.dropdownItem:hover svg {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.destructive {
+  color: var(--danger) !important;
+}
+
+.destructive::before {
+  background: var(--danger) !important;
+}
+
+.destructive:hover {
+  background: var(--danger-light) !important;
+  color: var(--danger) !important;
+}
+
+.destructive svg {
+  color: var(--danger) !important;
+}
+
+.destructive:hover svg {
+  color: var(--danger) !important;
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    left: 0;
+    padding: 0 16px;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .dropdownContent {
+    width: 260px;
+    margin-right: -8px;
+  }
 }

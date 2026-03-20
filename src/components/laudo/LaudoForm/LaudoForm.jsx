@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Input, { Textarea } from '../../ui/Input/Input'
+import { Input, Textarea, InputField } from '@/components/ui/Input'
 import Button from '../../ui/Button/Button'
 import DiseaseLibraryPanel from '../../disease/DiseaseLibraryPanel/DiseaseLibraryPanel'
 import SelectedDiseasesList from '../../disease/SelectedDiseasesList/SelectedDiseasesList'
@@ -25,9 +25,31 @@ const INITIAL_FORM = {
 function validate(step, form) {
   if (step === 1) {
     if (!form.paciente.nome.trim()) return 'O nome do paciente é obrigatório.'
+    if (!/^[a-zA-ZÀ-ÿ\s]+$/.test(form.paciente.nome)) return 'O nome deve conter apenas letras.'
     if (!form.paciente.cpf.trim()) return 'O CPF é obrigatório.'
+    if (form.paciente.cpf.replace(/\D/g, '').length !== 11) return 'O CPF deve ter 11 dígitos.'
+    if (!form.paciente.dataNascimento.trim()) return 'A data de nascimento é obrigatória.'
   }
   return null
+}
+
+function formatCPF(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 3) return digits
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
+function formatNome(value) {
+  return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '')
+}
+
+function formatData(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
 }
 
 export default function LaudoForm({ onSubmit }) {
@@ -98,28 +120,31 @@ export default function LaudoForm({ onSubmit }) {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Dados do Paciente</h3>
             <div className={styles.grid2}>
-              <Input
+              <InputField
                 label="Nome completo *"
                 id="nome"
                 value={form.paciente.nome}
-                onChange={e => setPacienteField('nome', e.target.value)}
+                onChange={e => setPacienteField('nome', formatNome(e.target.value))}
                 placeholder="Nome do paciente"
               />
-              <Input
+              <InputField
                 label="CPF *"
                 id="cpf"
                 value={form.paciente.cpf}
-                onChange={e => setPacienteField('cpf', e.target.value)}
+                onChange={e => setPacienteField('cpf', formatCPF(e.target.value))}
                 placeholder="000.000.000-00"
+                inputMode="numeric"
               />
-              <Input
-                label="Data de Nascimento"
+              <InputField
+                label="Data de Nascimento *"
                 id="dataNascimento"
-                type="date"
                 value={form.paciente.dataNascimento}
-                onChange={e => setPacienteField('dataNascimento', e.target.value)}
+                onChange={e => setPacienteField('dataNascimento', formatData(e.target.value))}
+                placeholder="dd/mm/yyyy"
+                inputMode="numeric"
+                maxLength={10}
               />
-              <Input
+              <InputField
                 label="Número do Processo"
                 id="processo"
                 value={form.paciente.processo}
@@ -201,10 +226,8 @@ export default function LaudoForm({ onSubmit }) {
               ← Anterior
             </Button>
           )}
-        </div>
-        <div className={styles.navRight}>
           {step < 5 && (
-            <Button variant="primary" onClick={nextStep}>
+            <Button variant="default" onClick={nextStep}>
               Próximo →
             </Button>
           )}
@@ -213,7 +236,7 @@ export default function LaudoForm({ onSubmit }) {
               <Button variant="secondary" onClick={() => handleSubmit('rascunho')}>
                 Salvar como Rascunho
               </Button>
-              <Button variant="primary" onClick={() => handleSubmit('em_analise')}>
+              <Button variant="default" onClick={() => handleSubmit('em_analise')}>
                 Enviar para Análise
               </Button>
             </>

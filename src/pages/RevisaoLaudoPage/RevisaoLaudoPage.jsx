@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext'
 import RichTextEditor, { plainTextToHtml } from '../../components/laudo/RichTextEditor/RichTextEditor'
 import { StatusBadge } from '../../components/ui/Badge/Badge'
 import Button from '../../components/ui/Button/Button'
+import { InputField } from '@/components/ui/Input'
+import { TypographyH1, TypographyMuted, TypographyH3, TypographyP } from '@/components/ui/typography'
 import { exportToPdf } from '../../utils/exportPdf'
 import { exportToDocx } from '../../utils/exportDocx'
 import styles from './RevisaoLaudoPage.module.css'
@@ -116,12 +118,12 @@ export default function RevisaoLaudoPage() {
           </button>
           <div>
             <div className={styles.titleRow}>
-              <h1 className={styles.title}>Revisão e Finalização</h1>
+              <TypographyH1 className={styles.title}>Revisão e Finalização</TypographyH1>
               <StatusBadge status={laudo.status} />
             </div>
-            <p className={styles.sub}>
+            <TypographyMuted className={styles.sub}>
               {laudo.numero} · {laudo.paciente?.nome} · {laudo.paciente?.processo || ''}
-            </p>
+            </TypographyMuted>
           </div>
         </div>
 
@@ -143,7 +145,7 @@ export default function RevisaoLaudoPage() {
             {exporting === 'docx' ? 'Gerando...' : 'Baixar Word (.docx)'}
           </Button>
           <Button
-            variant="primary"
+            variant="default"
             onClick={handleExportPdf}
             disabled={!!exporting}
           >
@@ -162,7 +164,7 @@ export default function RevisaoLaudoPage() {
         {/* ── Painel lateral — dados + CRM ───────────────────────────────── */}
         <aside className={styles.sidebar}>
           <section className={styles.infoCard}>
-            <h3 className={styles.cardTitle}>Dados do Laudo</h3>
+            <TypographyH3 className={styles.cardTitle}>Dados do Laudo</TypographyH3>
             <dl className={styles.dl}>
               <dt>Número</dt><dd>{laudo.numero}</dd>
               <dt>Paciente</dt><dd>{laudo.paciente?.nome}</dd>
@@ -178,7 +180,7 @@ export default function RevisaoLaudoPage() {
 
           {laudo.doencasSelecionadas?.length > 0 && (
             <section className={styles.infoCard}>
-              <h3 className={styles.cardTitle}>Condições ({laudo.doencasSelecionadas.length})</h3>
+              <TypographyH3 className={styles.cardTitle}>Condições ({laudo.doencasSelecionadas.length})</TypographyH3>
               <ul className={styles.condList}>
                 {laudo.doencasSelecionadas.map(d => (
                   <li key={d.id || d.diseaseId}>
@@ -191,23 +193,21 @@ export default function RevisaoLaudoPage() {
           )}
 
           <section className={styles.infoCard}>
-            <h3 className={styles.cardTitle}>Assinatura Eletrônica</h3>
-            <p className={styles.crmHint}>
+            <TypographyH3 className={styles.cardTitle}>Assinatura Eletrônica</TypographyH3>
+            <TypographyP className={styles.crmHint}>
               Nome e CRM são inseridos automaticamente no rodapé do PDF e do Word.
-            </p>
-            <div className={styles.crmField}>
-              <label className={styles.crmLabel}>Nome do Perito</label>
-              <input
-                className={styles.crmInput}
-                value={currentUser?.nome || ''}
-                readOnly
-                title="Nome do usuário logado"
-              />
-            </div>
-            <div className={styles.crmField}>
-              <label className={styles.crmLabel}>CRM *</label>
-              <input
-                className={styles.crmInput}
+            </TypographyP>
+            <InputField
+              id="perito-nome"
+              label="Nome do Perito"
+              value={currentUser?.nome || ''}
+              readOnly
+              title="Nome do usuário logado"
+            />
+            <div className="flex flex-col gap-1.5">
+              <InputField
+                id="crm"
+                label="CRM *"
                 value={crm}
                 onChange={e => setCrm(e.target.value)}
                 onBlur={handleCrmBlur}

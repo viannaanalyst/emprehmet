@@ -1,3 +1,4 @@
+/* Legacy badge styles for backwards compatibility */
 .badge {
   display: inline-flex;
   align-items: center;

@@ -1,29 +1,39 @@
 import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { TypographyH1, TypographyMuted } from '@/components/ui/typography'
+import { InputFieldWithSuffix } from '@/components/ui/Input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Eye, EyeOff } from 'lucide-react'
+import { toast } from 'sonner'
 import styles from './LoginPage.module.css'
+import Logo from '../../assets/logos/logo-emprehmet.svg'
 
 export default function LoginPage() {
   const { isAuthenticated, login } = useAuth()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [loading, setLoading] = useState(false)
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!username || !password) { setError('Preencha todos os campos.'); return }
+    if (!username || !password) {
+      toast.error('Preencha todos os campos.')
+      return
+    }
     setLoading(true)
-    setError('')
     const ok = await login(username, password)
     setLoading(false)
     if (ok) {
+      toast.success('Login realizado com sucesso!')
       navigate('/dashboard', { replace: true })
     } else {
-      setError('Usuário ou senha incorretos.')
+      toast.error('Usuário ou senha incorretos.')
     }
   }
 
@@ -32,41 +42,55 @@ export default function LoginPage() {
       <div className={styles.card}>
         <div className={styles.brandSection}>
           <div className={styles.logo}>
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-            </svg>
+            <img src={Logo} alt="Logo Emprehmet" className={styles.logoImage} />
           </div>
-          <h1 className={styles.appName}>Sistema de Laudos</h1>
-          <p className={styles.appDesc}>Gestão e elaboração de laudos periciais</p>
+          <TypographyH1 className={styles.appName}>Sistema de Laudos</TypographyH1>
+          <TypographyMuted className={styles.appDesc}>Gestão e elaboração de laudos periciais</TypographyMuted>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="username">Usuário</label>
-            <input
-              id="username"
-              className={styles.input}
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="Digite seu usuário"
-              autoComplete="username"
-              autoFocus
+          <InputFieldWithSuffix
+            id="username"
+            label="Usuário"
+            type="text"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            placeholder="Digite seu usuário"
+            autoComplete="username"
+            autoFocus
+          />
+          
+          <InputFieldWithSuffix
+            id="password"
+            label="Senha"
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Digite sua senha"
+            autoComplete="current-password"
+            suffix={
+              <button
+                type="button"
+                className={styles.togglePassword}
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            }
+          />
+
+          <div className={styles.rememberRow}>
+            <Checkbox
+              id="rememberMe"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
             />
+            <label htmlFor="rememberMe" className={styles.checkboxLabel}>
+              Lembrar-me
+            </label>
           </div>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">Senha</label>
-            <input
-              id="password"
-              className={styles.input}
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
-              autoComplete="current-password"
-            />
-          </div>
-          {error && <p className={styles.error}>{error}</p>}
+
           <button className={styles.submit} type="submit" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
           </button>

@@ -1,8 +1,20 @@
 import styles from './DiseaseCard.module.css'
 
 export default function DiseaseCard({ disease, onAdd, isAdded }) {
+  function handleClick() {
+    if (!isAdded) {
+      onAdd(disease)
+    }
+  }
+
   return (
-    <div className={`${styles.card} ${isAdded ? styles.added : ''}`}>
+    <div
+      className={`${styles.card} ${isAdded ? styles.added : ''}`}
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && handleClick()}
+    >
       <div className={styles.top}>
         <span className={styles.code}>{disease.codigo}</span>
         <span className={styles.category}>{disease.categoria}</span>
@@ -11,7 +23,7 @@ export default function DiseaseCard({ disease, onAdd, isAdded }) {
       <p className={styles.preview}>{disease.descricao.slice(0, 120)}...</p>
       <button
         className={`${styles.addBtn} ${isAdded ? styles.addedBtn : ''}`}
-        onClick={() => onAdd(disease)}
+        onClick={e => { e.stopPropagation(); handleClick() }}
         disabled={isAdded}
       >
         {isAdded ? (

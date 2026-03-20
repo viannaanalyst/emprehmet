@@ -74,8 +74,50 @@ export function AuthProvider({ children }) {
     return { ok: true }
   }
 
+  async function updateUser({ nome, email, avatar }) {
+    const users = read(KEYS.USERS) || []
+    const userIndex = users.findIndex(u => u.id === currentUser?.id)
+    if (userIndex === -1) return { ok: false, error: 'Usuário não encontrado.' }
+
+    const updates = { nome, email }
+    if (avatar !== undefined) {
+      updates.avatar = avatar
+    }
+
+    users[userIndex] = { ...users[userIndex], ...updates }
+    write(KEYS.USERS, users)
+
+    const session = read(KEYS.SESSION)
+    if (session) {
+      const updatedSession = { ...session, ...updates }
+      write(KEYS.SESSION, updatedSession)
+      setCurrentUser({ ...currentUser, ...updates })
+    }
+
+    return { ok: true }
+  }
+
+  async function updatePassword(senhaAtual, novaSenha) {
+    const users = read(KEYS.USERS) || []
+    const userIndex = users.findIndex(u => u.id === currentUser?.id)
+    if (userIndex === -1) return { ok: false, error: 'Usuário não encontrado.' }
+    
+    const user = users[userIndex]
+    const hashAtual = await hashPassword(senhaAtual)
+    
+    if (user.passwordHash !== hashAtual) {
+      return { ok: false, error: 'Senha atual incorreta.' }
+    }
+    
+    const hashNova = await hashPassword(novaSenha)
+    users[userIndex] = { ...users[userIndex], passwordHash: hashNova }
+    write(KEYS.USERS, users)
+    
+    return { ok: true }
+  }
+
   return (
-    <AuthContext.Provider value={{ currentUser, isAuthenticated: !!currentUser, loading, login, logout, register }}>
+    <AuthContext.Provider value={{ currentUser, isAuthenticated: !!currentUser, loading, login, logout, register, updateUser, updatePassword }}>
       {children}
     </AuthContext.Provider>
   )

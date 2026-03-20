@@ -4,6 +4,8 @@
   border-radius: var(--radius);
   padding: 12px 14px;
   transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  user-select: none;
 }
 
 .card:hover {

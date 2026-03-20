@@ -10,7 +10,7 @@
 }
 
 .modal {
-  background: var(--white);
+  background: white !important;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   display: flex;

@@ -1,5 +1,6 @@
 .page {
   min-height: 100vh;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,27 +11,32 @@
 .card {
   background: var(--white);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   padding: 36px 40px;
   width: 100%;
   max-width: 400px;
+  overflow: visible;
 }
 
 .brandSection {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .logo {
-  width: 68px;
-  height: 68px;
-  border-radius: 50%;
-  background: var(--primary-lighter);
-  color: var(--primary);
+  width: 140px;
+  height: 140px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 12px;
+  margin: 0 auto 8px;
+}
+
+.logoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .appName {
@@ -51,31 +57,34 @@
   gap: 14px;
 }
 
-.field {
+.togglePassword {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--grey-400);
+  padding: 4px;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
 }
 
-.label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--grey-700);
+.togglePassword:hover {
+  color: var(--grey-600);
 }
 
-.input {
-  padding: 10px 14px;
-  border: 1px solid var(--grey-300);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  color: var(--grey-800);
+.rememberRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -4px;
 }
 
-.input:focus {
-  border-color: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+.checkboxLabel {
+  font-size: 0.875rem;
+  color: var(--grey-600);
+  cursor: pointer;
+  user-select: none;
 }
 
 .error {
@@ -88,20 +97,36 @@
 }
 
 .submit {
-  padding: 11px;
-  background: var(--primary);
-  color: var(--white);
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  background: #3b82f6;
+  color: #ffffff;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 4px;
-  transition: background 0.15s;
+  margin-top: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
-.submit:hover:not(:disabled) { background: var(--primary-dark); }
-.submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.submit:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .hint {
   text-align: center;

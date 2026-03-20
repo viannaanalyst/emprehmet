@@ -3,18 +3,55 @@ import { useNavigate } from 'react-router-dom'
 import { useNotificacoes } from '../../contexts/NotificacoesContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useLaudos } from '../../contexts/LaudoContext'
+import { toast } from 'sonner'
 import Modal from '../../components/ui/Modal/Modal'
 import Button from '../../components/ui/Button/Button'
-import styles from './EmailSyncPage.module.css'
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { TypographyH1, TypographyMuted, TypographyH3, TypographyP, TypographySmall, TypographyLead } from '@/components/ui/typography'
+import { InputField } from '@/components/ui/Input'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Bell,
+  Settings,
+  Mail,
+  Copy,
+  Check,
+  Trash2,
+  Link,
+  Plus,
+  AlertTriangle,
+  Forward,
+  Filter,
+  ChevronDown,
+  RefreshCw,
+  ChevronRight,
+  ExternalLink,
+} from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 const TIPO_META = {
-  nova_pericia:    { label: 'Nova Perícia',      color: 'blue',   icon: '🩺' },
-  intimacao:       { label: 'Intimação',          color: 'yellow', icon: '⚖️' },
-  prazo:           { label: 'Prazo',              color: 'red',    icon: '⏰' },
-  laudo_devolvido: { label: 'Laudo Devolvido',   color: 'orange', icon: '↩️' },
-  outro:           { label: 'Outro',              color: 'grey',   icon: '📩' },
+  nova_pericia: { label: 'Nova Perícia', color: 'bg-blue-100 text-blue-700', borderColor: 'border-l-blue-500' },
+  intimacao: { label: 'Intimação', color: 'bg-yellow-100 text-yellow-700', borderColor: 'border-l-yellow-500' },
+  prazo: { label: 'Prazo', color: 'bg-red-100 text-red-700', borderColor: 'border-l-red-500' },
+  laudo_devolvido: { label: 'Laudo Devolvido', color: 'bg-orange-100 text-orange-700', borderColor: 'border-l-orange-500' },
+  outro: { label: 'Outro', color: 'bg-gray-100 text-gray-700', borderColor: 'border-l-gray-500' },
 }
 
 function formatDate(iso) {
@@ -38,564 +75,616 @@ function formatPrazo(iso) {
   return { text: `Vence em ${days} dias`, critical: false }
 }
 
-// ── Formulário de simulação ───────────────────────────────────────────────────
+function NotificationCard({ notification, onExpand, isExpanded, onMarcarLida, onExcluir, onVincular, onCriarLaudo }) {
+  const tipo = TIPO_META[notification.tipo] || TIPO_META.outro
+  const prazoInfo = formatPrazo(notification.prazo)
 
-const FORM_EMPTY = {
-  tipo: 'nova_pericia', processo: '', tribunal: '', assunto: '', resumo: '', prazo: '', urgente: false,
-}
-
-// ── Componente principal ──────────────────────────────────────────────────────
-
-export default function EmailSyncPage() {
-  const { currentUser } = useAuth()
-  const { laudos } = useLaudos()
-  const navigate = useNavigate()
-  const {
-    notificacoes, config, naoLidas,
-    marcarLida, marcarTodasLidas, excluirNotificacao,
-    vincularLaudo, simularRecebimento, salvarConfig,
-  } = useNotificacoes()
-
-  const [aba, setAba] = useState('notificacoes')   // 'notificacoes' | 'configuracao'
-  const [filtroTipo, setFiltroTipo] = useState('todos')
-  const [filtroLida, setFiltroLida] = useState(false)
-  const [searchProcesso, setSearchProcesso] = useState('')
-  const [expandida, setExpandida] = useState(null)   // id da notif expandida
-  const [modalSimular, setModalSimular] = useState(false)
-  const [formSimular, setFormSimular] = useState(FORM_EMPTY)
-  const [modalVincular, setModalVincular] = useState(null)  // notif a vincular
-  const [emailLocal, setEmailLocal] = useState(config.emailMedico)
-  const [savedMsg, setSavedMsg] = useState('')
-
-  // Endereço de recebimento gerado (simulado)
-  const emailRecebimento = `pje-${(currentUser?.id || 'user').slice(0, 8)}@notif.sistemalaudos.com.br`
-
-  // Filtros aplicados
-  const filtered = notificacoes.filter(n => {
-    if (filtroTipo !== 'todos' && n.tipo !== filtroTipo) return false
-    if (filtroLida && n.lida) return false
-    if (searchProcesso && !n.processo.toLowerCase().includes(searchProcesso.toLowerCase())) return false
-    return true
-  })
-
-  function handleSaveConfig() {
-    salvarConfig({ emailMedico: emailLocal, ativo: !!emailLocal })
-    setSavedMsg('Configuração salva!')
-    setTimeout(() => setSavedMsg(''), 3000)
-  }
-
-  function handleSimular() {
-    simularRecebimento(formSimular)
-    setModalSimular(false)
-    setFormSimular(FORM_EMPTY)
-    setAba('notificacoes')
-  }
-
-  function handleVincularLaudo(laudoId) {
-    if (!modalVincular) return
-    vincularLaudo(modalVincular.id, laudoId)
-    setModalVincular(null)
+  const handleExpand = (e) => {
+    e.stopPropagation()
+    onExpand(notification.id)
   }
 
   return (
-    <div className={styles.page}>
-
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Sincronização de E-mail / PJe</h1>
-          <p className={styles.sub}>
-            Receba notificações do PJe diretamente neste sistema — sem abrir Gmail ou Outlook.
-          </p>
+    <div
+      className={`bg-card border border-border rounded-lg p-4 hover:shadow-md transition-all border-l-4 ${tipo.borderColor} ${notification.lida ? 'bg-muted/30' : ''}`}
+    >
+      <div
+        className="flex items-start justify-between gap-3 cursor-pointer"
+        onClick={handleExpand}
+      >
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {!notification.lida && <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${notification.lida ? 'bg-gray-200 text-gray-500' : tipo.color}`}>{tipo.label}</span>
+              {notification.urgente && !notification.lida && (
+                <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700">Urgente</span>
+              )}
+              {prazoInfo && !notification.lida && (
+                <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${prazoInfo.critical ? 'bg-red-100 text-red-700' : 'bg-muted text-muted-foreground'}`}>
+                  {prazoInfo.text}
+                </span>
+              )}
+            </div>
+            <p className={`text-sm font-medium mb-1 ${notification.lida ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+              {notification.assunto || 'Notificação sem assunto'}
+            </p>
+            <div className={`flex items-center gap-4 text-xs ${notification.lida ? 'text-gray-400' : 'text-muted-foreground'}`}>
+              <span className="flex items-center gap-1">
+                <Mail className="w-3 h-3" />
+                {notification.origemEmail || 'Sistema'}
+              </span>
+              <span>{formatDate(notification.dataRecebimento)}</span>
+              {notification.processo && (
+                <span className="font-mono">Processo: {notification.processo}</span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className={styles.headerActions}>
-          {naoLidas > 0 && (
-            <button className={styles.marcarBtn} onClick={marcarTodasLidas}>
-              Marcar todas como lidas ({naoLidas})
-            </button>
-          )}
-          <Button variant="outline" onClick={() => setModalSimular(true)}>
-            + Simular Notificação
+        <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+          <Checkbox
+            checked={notification.lida}
+            onCheckedChange={(checked) => onMarcarLida(notification.id, checked === true)}
+            className="cursor-pointer"
+          />
+          <Button variant="ghost" size="sm" onClick={() => onExcluir(notification.id)} className="text-destructive hover:text-destructive">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t">
+          <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 space-y-2">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">De:</p>
+                  <p className="text-sm font-medium">{notification.origemEmail || 'Sistema'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Recebido em:</p>
+                  <p className="text-sm">{new Date(notification.dataRecebimento).toLocaleString('pt-BR')}</p>
+                </div>
+                {notification.processo && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Processo:</p>
+                    <p className="text-sm font-mono font-medium">{notification.processo}</p>
+                  </div>
+                )}
+                {notification.tribunal && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Tribunal:</p>
+                    <p className="text-sm">{notification.tribunal}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="border-t pt-3">
+              <p className="text-xs text-muted-foreground mb-2">Conteúdo do e-mail:</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{notification.resumo || 'Sem conteúdo disponível.'}</p>
+            </div>
+            {notification.link && (
+              <div className="border-t pt-3 flex items-center gap-2">
+                <a href={notification.link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                  <ExternalLink className="w-4 h-4" />
+                  Abrir no PJe
+                </a>
+              </div>
+            )}
+            <div className="border-t pt-3 flex gap-2 flex-wrap">
+              {notification.processo && !notification.laudoVinculado && (
+                <Button variant="default" size="sm" onClick={() => onCriarLaudo(notification.processo)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Laudo
+                </Button>
+              )}
+              {notification.processo && !notification.laudoVinculado && (
+                <Button variant="outline" size="sm" onClick={() => onVincular(notification.id)}>
+                  <Link className="w-4 h-4 mr-2" />
+                  Vincular Laudo
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function EmailInstructions({ emailRecebimento }) {
+  return (
+    <div className="space-y-4">
+      <div className="p-4 bg-muted rounded-lg space-y-3 text-sm">
+        <p className="font-medium text-foreground">Configure uma regra de encaminhamento no seu cliente de e-mail:</p>
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex-shrink-0">1</span>
+            <p>Abra as configurações de <strong>filtros/regras</strong> do seu cliente de e-mail (Gmail, Outlook, etc.)</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex-shrink-0">2</span>
+            <p>Crie uma nova regra com a condição: <strong>Remetente contém "@pje.jus.br"</strong></p>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex-shrink-0">3</span>
+            <p>Adicione a ação: <strong>Encaminhar para</strong> <code className="px-1.5 py-0.5 bg-muted rounded text-xs">{emailRecebimento}</code></p>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+        <AlertTriangle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+        <p className="text-blue-800">
+          <strong>Dica:</strong> Certifique-se de que o remetente do PJe está preenchido corretamente na aba anterior.
+          Você também pode adicionar outros remetentes (tribunais) manualmente.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+const FORM_EMPTY = { tipo: 'nova_pericia', assunto: '', corpo: '', processo: '', prazo: '', urgente: false }
+
+export default function EmailSyncPage() {
+  const { notificacoes, marcarLida, excluirNotificacao, vincularLaudo, simularRecebimento, config } = useNotificacoes()
+  const { user } = useAuth()
+  const { laudos } = useLaudos()
+  const navigate = useNavigate()
+
+  const [aba, setAba] = useState('notificacoes')
+  const [expandida, setExpandida] = useState(null)
+  const [modalSimular, setModalSimular] = useState(false)
+  const [formSimular, setFormSimular] = useState(FORM_EMPTY)
+  const [modalVincular, setModalVincular] = useState(null)
+  const [vincularLaudoId, setVincularLaudoId] = useState('')
+  const [emailLocal, setEmailLocal] = useState(config?.emailMedico || '')
+  const [savedMsg, setSavedMsg] = useState('')
+  const [searchProcesso, setSearchProcesso] = useState('')
+  const [filtroTipo, setFiltroTipo] = useState('todos')
+  const [filtroLida, setFiltroLida] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [deleteNotificacaoId, setDeleteNotificacaoId] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const emailRecebimento = `pje-${user?.id || 'user'}@emprehmet.com`
+
+  const filtered = (notificacoes || []).filter(n => {
+    const matchProc = !searchProcesso || (n.processo && n.processo.includes(searchProcesso))
+    const matchTipo = filtroTipo === 'todos' || n.tipo === filtroTipo
+    const matchLida = !filtroLida || !n.lida
+    return matchProc && matchTipo && matchLida
+  })
+
+  function handleCopyEmail() {
+    navigator.clipboard.writeText(emailRecebimento)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleSaveConfig() {
+    if (!emailLocal) return
+    useNotificacoes.setState(s => ({
+      config: { ...s.config, emailMedico: emailLocal, ativo: true }
+    }))
+    setSavedMsg('Config salvo!')
+    setTimeout(() => setSavedMsg(''), 3000)
+  }
+
+  function handleMarcarLida(id, lida) {
+    marcarLida(id, lida)
+  }
+
+  function handleExcluirNotificacao(id) {
+    excluirNotificacao(id)
+    setExpandida(null)
+    setDeleteNotificacaoId(null)
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true)
+    await new Promise(r => setTimeout(r, 1500))
+    setRefreshing(false)
+    toast.success('E-mails sincronizados com sucesso!')
+  }
+
+  function handleSimular() {
+    if (!formSimular.assunto.trim()) {
+      alert('Preencha o assunto')
+      return
+    }
+    simularRecebimento({
+      tipo: formSimular.tipo,
+      assunto: formSimular.assunto,
+      resumo: formSimular.corpo || 'Corpo simulação...',
+      processo: formSimular.processo || '0000000-00.2025.0.00.0000',
+      prazo: formSimular.prazo || null,
+      urgente: formSimular.urgente,
+    })
+    setModalSimular(false)
+    setFormSimular(FORM_EMPTY)
+  }
+
+  function handleVincular() {
+    if (!vincularLaudoId) return
+    vincularLaudo(modalVincular, vincularLaudoId)
+    setModalVincular(null)
+    setVincularLaudoId('')
+  }
+
+  const TIPO_OPTIONS = [
+    { value: 'todos', label: 'Todos os tipos' },
+    ...Object.entries(TIPO_META).map(([k, v]) => ({ value: k, label: v.label })),
+  ]
+
+  const selectedTipoLabel = TIPO_OPTIONS.find(opt => opt.value === filtroTipo)?.label || 'Todos os tipos'
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <TypographyH1 className="text-2xl lg:text-3xl mb-1 flex items-center gap-2">
+            <Forward className="w-7 h-7" />
+            Sincronização de E-mail
+          </TypographyH1>
+          <TypographyMuted>
+            {(notificacoes || []).length} notificação(ões), {(notificacoes || []).filter(n => !n.lida).length} não lida(s)
+          </TypographyMuted>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Sincronizando...' : 'Atualizar'}
+          </Button>
+          <Button variant="default" onClick={() => setModalSimular(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Simular
           </Button>
         </div>
       </div>
 
-      {/* ── Abas ─────────────────────────────────────────────────────────── */}
-      <div className={styles.abas}>
-        <button
-          className={`${styles.aba} ${aba === 'notificacoes' ? styles.abaAtiva : ''}`}
-          onClick={() => setAba('notificacoes')}
-        >
-          Notificações
-          {naoLidas > 0 && <span className={styles.badge}>{naoLidas}</span>}
-        </button>
-        <button
-          className={`${styles.aba} ${aba === 'configuracao' ? styles.abaAtiva : ''}`}
-          onClick={() => setAba('configuracao')}
-        >
-          Configuração e Integração
-        </button>
+      <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit">
+        {['notificacoes', 'configuracao'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setAba(tab)}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${aba === tab ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            {tab === 'notificacoes' ? 'Notificações' : 'Configuração'}
+          </button>
+        ))}
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          ABA: NOTIFICAÇÕES
-      ════════════════════════════════════════════════════════════════════ */}
-      {aba === 'notificacoes' && (
-        <div className={styles.notifSection}>
-          {/* Filtros */}
-          <div className={styles.filtros}>
-            <input
-              className={styles.searchInput}
-              type="text"
-              placeholder="Buscar por nº do processo..."
-              value={searchProcesso}
-              onChange={e => setSearchProcesso(e.target.value)}
-            />
-            <select
-              className={styles.selectFiltro}
-              value={filtroTipo}
-              onChange={e => setFiltroTipo(e.target.value)}
-            >
-              <option value="todos">Todos os tipos</option>
-              {Object.entries(TIPO_META).map(([k, v]) => (
-                <option key={k} value={k}>{v.label}</option>
-              ))}
-            </select>
-            <label className={styles.checkLabel}>
-              <input
-                type="checkbox"
-                checked={filtroLida}
-                onChange={e => setFiltroLida(e.target.checked)}
+      <AnimatePresence mode="wait">
+        {aba === 'notificacoes' && (
+          <motion.div
+            key="notificacoes"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row gap-3 p-4 bg-card border border-border rounded-lg">
+              <InputField
+                className="flex-1"
+                type="text"
+                placeholder="Buscar por nº do processo..."
+                value={searchProcesso}
+                onChange={e => setSearchProcesso(e.target.value)}
               />
-              Somente não lidas
-            </label>
-          </div>
 
-          {/* Lista */}
-          {filtered.length === 0 ? (
-            <div className={styles.empty}>
-              <span style={{ fontSize: 40 }}>📭</span>
-              <p>Nenhuma notificação encontrada.</p>
-              <p>Configure o encaminhamento de e-mail na aba <strong>Configuração</strong> para começar a receber alertas do PJe aqui.</p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 px-4 py-2 border border-input rounded-md text-sm bg-background hover:bg-muted/50 transition-colors min-w-[180px]">
+                    <Filter className="w-4 h-4 text-muted-foreground" />
+                    <span className="flex-1 text-left">{selectedTipoLabel}</span>
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[180px]">
+                  {TIPO_OPTIONS.map(opt => (
+                    <DropdownMenuItem
+                      key={opt.value}
+                      onClick={() => setFiltroTipo(opt.value)}
+                      className="cursor-pointer"
+                    >
+                      {opt.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={filtroLida}
+                  onCheckedChange={(checked) => setFiltroLida(checked === true)}
+                />
+                Somente não lidas
+              </label>
             </div>
-          ) : (
-            <div className={styles.feed}>
-              {filtered.map(n => {
-                const meta = TIPO_META[n.tipo] || TIPO_META.outro
-                const prazo = formatPrazo(n.prazo)
-                const isOpen = expandida === n.id
 
-                return (
-                  <div
-                    key={n.id}
-                    className={`${styles.card} ${!n.lida ? styles.cardNaoLida : ''} ${n.urgente ? styles.cardUrgente : ''}`}
-                  >
-                    <div className={styles.cardTop} onClick={() => {
-                      setExpandida(isOpen ? null : n.id)
-                      if (!n.lida) marcarLida(n.id)
-                    }}>
-                      <div className={styles.cardLeft}>
-                        <span className={`${styles.tipoBadge} ${styles[`tipo_${meta.color}`]}`}>
-                          {meta.icon} {meta.label}
-                        </span>
-                        {n.urgente && <span className={styles.urgenteTag}>⚠️ URGENTE</span>}
-                        {!n.lida && <span className={styles.naoLidaDot} title="Não lida" />}
-                      </div>
-                      <span className={styles.dataReceb}>{formatDate(n.dataRecebimento)}</span>
-                    </div>
-
-                    <div className={styles.cardBody} onClick={() => {
-                      setExpandida(isOpen ? null : n.id)
-                      if (!n.lida) marcarLida(n.id)
-                    }}>
-                      <p className={styles.processo}>{n.processo}</p>
-                      <p className={styles.tribunal}>{n.tribunal}</p>
-                      <p className={styles.assunto}>{n.assunto}</p>
-
-                      {prazo && (
-                        <span className={`${styles.prazoTag} ${prazo.critical ? styles.prazoCritical : ''}`}>
-                          🗓 {prazo.text}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Expansão */}
-                    {isOpen && (
-                      <div className={styles.cardExpanded}>
-                        <div className={styles.expandedBody}>
-                          <p className={styles.expandedLabel}>Origem</p>
-                          <p className={styles.expandedVal}>{n.origemEmail}</p>
-                          <p className={styles.expandedLabel}>Resumo</p>
-                          <p className={styles.expandedVal}>{n.resumo}</p>
-                          {n.laudoId && (
-                            <div className={styles.laudoVinculado}>
-                              <span>✅ Laudo vinculado</span>
-                              <button
-                                className={styles.linkBtn}
-                                onClick={() => navigate(`/revisar-laudo/${n.laudoId}`)}
-                              >
-                                Abrir laudo →
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className={styles.cardActions}>
-                          {!n.laudoId && (
-                            <Button variant="primary" size="sm" onClick={() => setModalVincular(n)}>
-                              Vincular a laudo existente
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/atribuir-laudo?processo=${encodeURIComponent(n.processo)}`)}
-                          >
-                            Criar novo laudo
-                          </Button>
-                          <button className={styles.deleteBtn} onClick={() => excluirNotificacao(n.id)} title="Remover">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6"/>
-                              <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
-                              <path d="M9 6V4h6v2"/>
-                            </svg>
-                            Remover
-                          </button>
-                        </div>
-                      </div>
-                    )}
+            {filtered.length === 0 ? (
+              <Card className="py-16">
+                <CardContent className="flex flex-col items-center justify-center text-center">
+                  <div className="p-4 bg-muted rounded-full mb-4">
+                    <Mail className="w-8 h-8 text-muted-foreground" />
                   </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════════
-          ABA: CONFIGURAÇÃO E INTEGRAÇÃO
-      ════════════════════════════════════════════════════════════════════ */}
-      {aba === 'configuracao' && (
-        <div className={styles.configSection}>
-
-          {/* ── Passo 1: Endereço de recebimento ── */}
-          <div className={styles.configCard}>
-            <div className={styles.configCardHeader}>
-              <span className={styles.stepBadge}>1</span>
-              <div>
-                <h3>Endereço de recebimento do sistema</h3>
-                <p>Este é o e-mail gerado para o seu perfil. Você vai redirecionar os e-mails do PJe para este endereço.</p>
-              </div>
-            </div>
-            <div className={styles.emailBox}>
-              <span className={styles.emailAddr}>{emailRecebimento}</span>
-              <button
-                className={styles.copyBtn}
-                onClick={() => { navigator.clipboard?.writeText(emailRecebimento); alert('Copiado!') }}
-              >
-                Copiar
-              </button>
-            </div>
-            <p className={styles.configNote}>
-              ⚠️ <strong>Atenção:</strong> Este endereço é exclusivo para receber notificações do PJe.
-              Para que a integração funcione em produção, é necessário configurar um serviço de e-mail inbound
-              (SendGrid, AWS SES ou similar) — veja o Passo 4.
-            </p>
-          </div>
-
-          {/* ── Passo 2: E-mail do médico ── */}
-          <div className={styles.configCard}>
-            <div className={styles.configCardHeader}>
-              <span className={styles.stepBadge}>2</span>
-              <div>
-                <h3>Seu e-mail cadastrado no PJe</h3>
-                <p>Informe o e-mail que você usa no PJe para receber as notificações de novas perícias.</p>
-              </div>
-            </div>
-            <div className={styles.emailInputRow}>
-              <input
-                className={styles.emailInput}
-                type="email"
-                placeholder="seu.email@gmail.com ou outlook.com"
-                value={emailLocal}
-                onChange={e => setEmailLocal(e.target.value)}
-              />
-              <Button variant="primary" onClick={handleSaveConfig} disabled={!emailLocal}>
-                Salvar
-              </Button>
-              {savedMsg && <span className={styles.savedMsg}>✓ {savedMsg}</span>}
-            </div>
-            {config.ativo && (
-              <div className={styles.statusAtivo}>
-                <span className={styles.dotAtivo} /> Encaminhamento ativo para: <strong>{config.emailMedico}</strong>
+                  <TypographyH3 className="mb-2">Nenhuma notificação encontrada</TypographyH3>
+                  <TypographyMuted className="max-w-md">
+                    Configure o encaminhamento de e-mail na aba Configuração para começar a receber alertas do PJe aqui.
+                  </TypographyMuted>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {filtered.map(n => (
+                  <NotificationCard
+                    key={n.id}
+                    notification={n}
+                    onExpand={(id) => setExpandida(expandida === id ? null : id)}
+                    isExpanded={expandida === n.id}
+                    onMarcarLida={handleMarcarLida}
+                    onExcluir={(id) => setDeleteNotificacaoId(id)}
+                    onVincular={setModalVincular}
+                    onCriarLaudo={(processo) => navigate(`/atribuir-laudo?processo=${encodeURIComponent(processo)}`)}
+                  />
+                ))}
               </div>
             )}
-          </div>
+          </motion.div>
+        )}
 
-          {/* ── Passo 3: Configurar encaminhamento ── */}
-          <div className={styles.configCard}>
-            <div className={styles.configCardHeader}>
-              <span className={styles.stepBadge}>3</span>
-              <div>
-                <h3>Configure o encaminhamento automático no seu e-mail</h3>
-                <p>Os e-mails do PJe precisam ser redirecionados automaticamente para o endereço gerado no Passo 1.</p>
-              </div>
-            </div>
-            <EmailInstructions emailRecebimento={emailRecebimento} />
-          </div>
+        {aba === 'configuracao' && (
+          <motion.div
+            key="configuracao"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-6"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">1</span>
+                  Endereço de recebimento do sistema
+                </CardTitle>
+                <CardDescription>
+                  Este é o e-mail gerado para o seu perfil. Você vai redirecionar os e-mails do PJe para este endereço.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg border">
+                  <code className="flex-1 font-mono text-sm text-primary font-semibold break-all">{emailRecebimento}</code>
+                  <Button variant="outline" size="sm" onClick={handleCopyEmail}>
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-1.5 text-green-600" />
+                        Copiado!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-1.5" />
+                        Copiar
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                  <AlertTriangle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-yellow-800">
+                    <strong>Atenção:</strong> Este endereço é exclusivo para receber notificações do PJe.
+                    Para que a integração funcione em produção, é necessário configurar um serviço de e-mail inbound.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* ── Passo 4: Backend/Webhook (técnico) ── */}
-          <div className={styles.configCard}>
-            <div className={styles.configCardHeader}>
-              <span className={styles.stepBadge}>4</span>
-              <div>
-                <h3>Integração do backend (para desenvolvedores)</h3>
-                <p>Como o servidor processa os e-mails recebidos e cria notificações neste sistema.</p>
-              </div>
-            </div>
-            <BackendDocs emailRecebimento={emailRecebimento} />
-          </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">2</span>
+                  Seu e-mail cadastrado no PJe
+                </CardTitle>
+                <CardDescription>
+                  Informe o e-mail que você usa no PJe para receber as notificações de novas perícias.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <InputField
+                    className="flex-1"
+                    type="email"
+                    placeholder="seu.email@gmail.com"
+                    value={emailLocal}
+                    onChange={e => setEmailLocal(e.target.value)}
+                  />
+                  <Button variant="default" onClick={handleSaveConfig} disabled={!emailLocal}>
+                    Salvar
+                  </Button>
+                  {savedMsg && (
+                    <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                      <Check className="w-4 h-4" />
+                      {savedMsg}
+                    </span>
+                  )}
+                </div>
+                {config.ativo && (
+                  <div className="flex items-center gap-2 text-sm text-green-700">
+                    <span className="w-2 h-2 rounded-full bg-green-600" />
+                    Encaminhamento ativo para: <strong>{config.emailMedico}</strong>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        </div>
-      )}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold">3</span>
+                  Configure o encaminhamento automático
+                </CardTitle>
+                <CardDescription>
+                  Os e-mails do PJe precisam ser redirecionados automaticamente para o endereço gerado.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <EmailInstructions emailRecebimento={emailRecebimento} />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          MODAL: SIMULAR NOTIFICAÇÃO
-      ════════════════════════════════════════════════════════════════════ */}
       <Modal
         isOpen={modalSimular}
         onClose={() => { setModalSimular(false); setFormSimular(FORM_EMPTY) }}
         title="Simular recebimento de notificação PJe"
         size="md"
       >
-        <p className={styles.modalHint}>
+        <p className="text-sm text-muted-foreground mb-4">
           Útil para testar o fluxo sem depender de um e-mail real do tribunal.
         </p>
-        <div className={styles.simForm}>
-          <div className={styles.simRow2}>
-            <div className={styles.simField}>
-              <label>Tipo</label>
-              <select value={formSimular.tipo} onChange={e => setFormSimular(f => ({ ...f, tipo: e.target.value }))}>
-                {Object.entries(TIPO_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div className={styles.simField}>
-              <label>Urgente?</label>
-              <label className={styles.toggleLabel}>
-                <input
-                  type="checkbox"
-                  checked={formSimular.urgente}
-                  onChange={e => setFormSimular(f => ({ ...f, urgente: e.target.checked }))}
-                />
-                Sim, marcar como urgente
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              id="tipo"
+              label="Tipo"
+              list="tipo-list"
+              value={formSimular.tipo}
+              onChange={e => setFormSimular(f => ({ ...f, tipo: e.target.value }))}
+            />
+            <datalist id="tipo-list">
+              {Object.entries(TIPO_META).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </datalist>
+            <div className="flex items-center">
+              <Checkbox
+                checked={formSimular.urgente}
+                onCheckedChange={(checked) => setFormSimular(f => ({ ...f, urgente: checked === true }))}
+              />
+              <label className="flex items-center gap-2 text-sm cursor-pointer ml-2">
+                <span className="font-medium">Marcar como urgente</span>
               </label>
             </div>
           </div>
-          <div className={styles.simField}>
-            <label>Nº do Processo *</label>
-            <input
-              placeholder="1234567-89.2024.8.26.0001"
+          <InputField
+            id="assunto"
+            label="Assunto"
+            placeholder="Ex: Intimação para entrega de laudo"
+            value={formSimular.assunto}
+            onChange={e => setFormSimular(f => ({ ...f, assunto: e.target.value }))}
+          />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-foreground">Corpo</label>
+            <Textarea
+              rows={4}
+              placeholder="Conteúdo do e-mail..."
+              value={formSimular.corpo}
+              onChange={e => setFormSimular(f => ({ ...f, corpo: e.target.value }))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              id="processo"
+              label="Processo"
+              placeholder="0000000-00.2025.0.00.0000"
               value={formSimular.processo}
               onChange={e => setFormSimular(f => ({ ...f, processo: e.target.value }))}
             />
-          </div>
-          <div className={styles.simField}>
-            <label>Tribunal / Vara</label>
-            <input
-              placeholder="TJSP – 3ª Vara Cível"
-              value={formSimular.tribunal}
-              onChange={e => setFormSimular(f => ({ ...f, tribunal: e.target.value }))}
-            />
-          </div>
-          <div className={styles.simField}>
-            <label>Assunto do e-mail</label>
-            <input
-              placeholder="[PJe] Nova perícia médica atribuída – Processo..."
-              value={formSimular.assunto}
-              onChange={e => setFormSimular(f => ({ ...f, assunto: e.target.value }))}
-            />
-          </div>
-          <div className={styles.simField}>
-            <label>Resumo / corpo do e-mail</label>
-            <textarea
-              rows={3}
-              placeholder="Vossa Senhoria foi designado como perito médico para o processo acima..."
-              value={formSimular.resumo}
-              onChange={e => setFormSimular(f => ({ ...f, resumo: e.target.value }))}
-            />
-          </div>
-          <div className={styles.simField}>
-            <label>Data limite do prazo (opcional)</label>
-            <input
+            <InputField
+              id="prazo"
+              label="Prazo"
               type="date"
               value={formSimular.prazo}
-              onChange={e => setFormSimular(f => ({ ...f, prazo: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+              onChange={e => setFormSimular(f => ({ ...f, prazo: e.target.value }))}
             />
           </div>
         </div>
-        <div className={styles.modalFooter}>
-          <Button variant="outline" onClick={() => { setModalSimular(false); setFormSimular(FORM_EMPTY) }}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSimular} disabled={!formSimular.processo}>
-            Simular recebimento
-          </Button>
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+          <Button variant="cancel" onClick={() => { setModalSimular(false); setFormSimular(FORM_EMPTY) }}>Cancelar</Button>
+          <Button variant="default" onClick={handleSimular}>Simular recebimento</Button>
         </div>
       </Modal>
 
-      {/* ════════════════════════════════════════════════════════════════════
-          MODAL: VINCULAR LAUDO
-      ════════════════════════════════════════════════════════════════════ */}
       <Modal
         isOpen={!!modalVincular}
-        onClose={() => setModalVincular(null)}
-        title="Vincular notificação a um laudo"
-        size="md"
+        onClose={() => { setModalVincular(null); setVincularLaudoId('') }}
+        title="Vincular a um laudo existente"
+        size="sm"
       >
-        <p className={styles.modalHint}>
-          Processo: <strong>{modalVincular?.processo}</strong>
-        </p>
-        {laudos.length === 0 ? (
-          <p className={styles.empty}>Nenhum laudo cadastrado ainda.</p>
-        ) : (
-          <div className={styles.laudoPickList}>
-            {laudos.map(l => (
-              <button key={l.id} className={styles.laudoPickItem} onClick={() => handleVincularLaudo(l.id)}>
-                <span className={styles.laudoPickNum}>{l.numero}</span>
-                <span>{l.paciente?.nome}</span>
-                <span className={styles.laudoPickProc}>{l.paciente?.processo}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </Modal>
-    </div>
-  )
-}
-
-// ── Sub-componente: Instruções Gmail / Outlook ───────────────────────────────
-
-function EmailInstructions({ emailRecebimento }) {
-  const [aba, setAba] = useState('gmail')
-  return (
-    <div className={styles.instrucoes}>
-      <div className={styles.instrAba}>
-        <button className={`${styles.instrBtn} ${aba === 'gmail' ? styles.instrBtnAtivo : ''}`} onClick={() => setAba('gmail')}>Gmail</button>
-        <button className={`${styles.instrBtn} ${aba === 'outlook' ? styles.instrBtnAtivo : ''}`} onClick={() => setAba('outlook')}>Outlook</button>
-      </div>
-
-      {aba === 'gmail' && (
-        <ol className={styles.steps}>
-          <li>Abra o Gmail e clique em <strong>Configurações</strong> (ícone ⚙️) → <strong>"Ver todas as configurações"</strong>.</li>
-          <li>Vá para a aba <strong>"Encaminhamento e POP/IMAP"</strong>.</li>
-          <li>Clique em <strong>"Adicionar endereço de encaminhamento"</strong> e cole o endereço:<br />
-            <code className={styles.codeBlock}>{emailRecebimento}</code>
-          </li>
-          <li>O Gmail enviará um e-mail de confirmação — clique no link para validar.</li>
-          <li>De volta em Configurações, marque <strong>"Encaminhar uma cópia de e-mail recebido para"</strong> e selecione o endereço acima.</li>
-          <li><strong>Opcional e recomendado:</strong> Crie um filtro para encaminhar <em>somente</em> e-mails com remetente <code>@pje.jus.br</code> ou <code>@tjsp.jus.br</code>.<br />
-            Isso evita que e-mails pessoais sejam enviados ao sistema.</li>
-        </ol>
-      )}
-
-      {aba === 'outlook' && (
-        <ol className={styles.steps}>
-          <li>Abra o Outlook e acesse <strong>Configurações</strong> → <strong>"Ver todas as configurações do Outlook"</strong>.</li>
-          <li>Vá em <strong>Correio → Encaminhamento</strong>.</li>
-          <li>Habilite a opção <strong>"Habilitar encaminhamento"</strong> e insira:<br />
-            <code className={styles.codeBlock}>{emailRecebimento}</code>
-          </li>
-          <li>Clique em <strong>Salvar</strong>.</li>
-          <li><strong>Opcional e recomendado:</strong> Configure uma regra em <strong>Regras de caixa de entrada</strong> para encaminhar apenas mensagens de <code>pje.jus.br</code>, evitando o envio de e-mails pessoais.</li>
-        </ol>
-      )}
-    </div>
-  )
-}
-
-// ── Sub-componente: Documentação técnica de backend ──────────────────────────
-
-function BackendDocs({ emailRecebimento }) {
-  const [tab, setTab] = useState('fluxo')
-  return (
-    <div className={styles.techDocs}>
-      <div className={styles.instrAba}>
-        <button className={`${styles.instrBtn} ${tab === 'fluxo' ? styles.instrBtnAtivo : ''}`} onClick={() => setTab('fluxo')}>Fluxo geral</button>
-        <button className={`${styles.instrBtn} ${tab === 'sendgrid' ? styles.instrBtnAtivo : ''}`} onClick={() => setTab('sendgrid')}>SendGrid</button>
-        <button className={`${styles.instrBtn} ${tab === 'ses' ? styles.instrBtnAtivo : ''}`} onClick={() => setTab('ses')}>AWS SES</button>
-        <button className={`${styles.instrBtn} ${tab === 'payload' ? styles.instrBtnAtivo : ''}`} onClick={() => setTab('payload')}>Payload da API</button>
-      </div>
-
-      {tab === 'fluxo' && (
-        <div className={styles.fluxo}>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>📧</span><span>PJe envia e-mail de notificação ao médico</span></div>
-          <div className={styles.fluxoArrow}>↓</div>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>📤</span><span>Gmail/Outlook redireciona automaticamente para <code>{emailRecebimento}</code></span></div>
-          <div className={styles.fluxoArrow}>↓</div>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>🔌</span><span>SendGrid Inbound Parse ou AWS SES recebe o e-mail e dispara webhook (HTTP POST)</span></div>
-          <div className={styles.fluxoArrow}>↓</div>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>⚙️</span><span>Backend extrai número do processo, tipo de notificação e prazo via regex</span></div>
-          <div className={styles.fluxoArrow}>↓</div>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>💾</span><span>Backend salva a notificação no banco e retorna via API para este sistema</span></div>
-          <div className={styles.fluxoArrow}>↓</div>
-          <div className={styles.fluxoStep}><span className={styles.fluxoIcon}>🔔</span><span>Card aparece neste menu com todos os dados do processo</span></div>
-        </div>
-      )}
-
-      {tab === 'sendgrid' && (
-        <div>
-          <ol className={styles.steps}>
-            <li>Crie uma conta no <strong>SendGrid</strong> e acesse <strong>Settings → Inbound Parse</strong>.</li>
-            <li>Configure um MX record DNS para o domínio de recebimento:<br />
-              <code className={styles.codeBlock}>MX  notif.sistemalaudos.com.br  →  mx.sendgrid.net  (prioridade 10)</code>
-            </li>
-            <li>No painel do SendGrid, adicione o hostname <code>notif.sistemalaudos.com.br</code> apontando para sua URL de webhook:<br />
-              <code className={styles.codeBlock}>POST https://sua-api.com/webhook/email-pje</code>
-            </li>
-            <li>O SendGrid irá fazer um POST com os dados do e-mail em <code>multipart/form-data</code>, incluindo campos <code>from</code>, <code>subject</code>, <code>text</code> e <code>html</code>.</li>
-            <li>No seu backend (Node.js / Python / etc.), parse o campo <code>subject</code> e <code>text</code> para extrair o número do processo com regex:<br />
-              <code className={styles.codeBlock}>{`/\\d{7}-\\d{2}\\.\\d{4}\\.\\d\\.\\d{2}\\.\\d{4}/`}</code>
-            </li>
-          </ol>
-        </div>
-      )}
-
-      {tab === 'ses' && (
-        <ol className={styles.steps}>
-          <li>No console AWS, vá em <strong>SES → Email receiving → Rule sets</strong> e crie um novo rule set.</li>
-          <li>Adicione uma regra com ação <strong>"SNS"</strong> ou <strong>"Lambda"</strong>.</li>
-          <li>Configure o domínio com MX record apontando para <code>inbound-smtp.&lt;region&gt;.amazonaws.com</code>.</li>
-          <li>Na Lambda, o evento terá <code>Records[0].ses.mail</code> com <code>subject</code>, <code>from</code>, <code>headers</code> e o body via S3 (configure um bucket de staging).</li>
-          <li>A Lambda extrai o número do processo, consulta o banco de dados para verificar qual médico é o destinatário e insere uma nova notificação.</li>
-          <li>Via API Gateway ou AppSync, o frontend consulta as notificações em tempo real (polling ou WebSocket).</li>
-        </ol>
-      )}
-
-      {tab === 'payload' && (
-        <div>
-          <p className={styles.techNote}>Payload que seu backend deve enviar para este sistema (via API REST ou localStorage direto neste protótipo):</p>
-          <pre className={styles.codeJson}>{`POST /api/notificacoes
-
-{
-  "tipo": "nova_pericia",          // nova_pericia | intimacao | prazo | laudo_devolvido | outro
-  "processo": "1234567-89.2024.8.26.0001",
-  "tribunal": "TJSP – 5ª Vara Cível",
-  "assunto": "[PJe] Nova perícia atribuída",
-  "resumo": "Texto extraído do corpo do e-mail...",
-  "origemEmail": "noreply@pje.tjsp.jus.br",
-  "dataRecebimento": "2024-11-15T10:30:00.000Z",  // ISO 8601
-  "prazo": "2024-12-15T23:59:59.000Z",             // null se não houver
-  "urgente": false
-}`}</pre>
-          <p className={styles.techNote} style={{ marginTop: 12 }}>
-            Regex sugerida para extrair o número do processo a partir do assunto ou corpo do e-mail PJe:
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Vincular notificação do processo <strong>{modalVincular}</strong> a um laudo existente:
           </p>
-          <pre className={styles.codeJson}>{`// JavaScript
-const REGEX_PROCESSO = /\\d{7}-\\d{2}\\.\\d{4}\\.\\d\\.\\d{2}\\.\\d{4}/g
-
-// Python
-import re
-REGEX_PROCESSO = r'\\d{7}-\\d{2}\\.\\d{4}\\.\\d\\.\\d{2}\\.\\d{4}'
-matches = re.findall(REGEX_PROCESSO, email_body)`}</pre>
+          <div className="relative">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center gap-2 px-4 py-2.5 border border-input rounded-lg text-sm bg-white hover:bg-gray-50 transition-colors">
+                  <span className="flex-1 text-left">
+                    {vincularLaudoId
+                      ? laudos.find(l => l.id === vincularLaudoId)?.numero + ' - ' + (laudos.find(l => l.id === vincularLaudoId)?.paciente?.nome || 'Sem paciente')
+                      : 'Selecione um laudo...'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                sideOffset={4}
+                className="max-h-60 overflow-y-auto"
+                style={{ minWidth: 'var(--radix-dropdown-menu-trigger-width)', zIndex: 1050 }}
+              >
+                {laudos.length === 0 ? (
+                  <DropdownMenuItem disabled className="text-muted-foreground">
+                    Nenhum laudo disponível
+                  </DropdownMenuItem>
+                ) : (
+                  laudos.map(l => (
+                    <DropdownMenuItem
+                      key={l.id}
+                      onClick={() => setVincularLaudoId(l.id)}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{l.numero}</span>
+                        <span className="text-xs text-muted-foreground">{l.paciente?.nome || 'Sem paciente'}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      )}
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+          <Button variant="cancel" onClick={() => { setModalVincular(null); setVincularLaudoId('') }}>Cancelar</Button>
+          <Button variant="default" onClick={handleVincular} disabled={!vincularLaudoId}>Vincular</Button>
+        </div>
+      </Modal>
+
+      <AlertDialog open={!!deleteNotificacaoId} onOpenChange={(open) => !open && setDeleteNotificacaoId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta notificação? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleExcluirNotificacao(deleteNotificacaoId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

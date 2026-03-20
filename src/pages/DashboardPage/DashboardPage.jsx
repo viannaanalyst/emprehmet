@@ -1,23 +1,74 @@
 import { useNavigate } from 'react-router-dom'
 import { useLaudos } from '../../contexts/LaudoContext'
 import { useAuth } from '../../contexts/AuthContext'
-import styles from './DashboardPage.module.css'
+import { useSidebar } from '../../contexts/SidebarContext'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
+import { TypographyH1, TypographyMuted, TypographyH2, TypographyH3, TypographySmall, TypographyP } from '@/components/ui/typography'
+import {
+  FileText,
+  Edit,
+  Clock,
+  Check,
+  LayoutDashboard,
+  Eye,
+  ClipboardCheck,
+  Plus,
+} from 'lucide-react'
 
-function StatCard({ label, value, color, icon }) {
+function StatCard({ label, value, colorClass, icon: Icon, index }) {
   return (
-    <div className={`${styles.statCard} ${styles[color]}`}>
-      <div className={styles.statIcon}>{icon}</div>
-      <div>
-        <p className={styles.statValue}>{value}</p>
-        <p className={styles.statLabel}>{label}</p>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+    >
+      <Card className={`overflow-hidden border-l-4 ${colorClass}`}>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl ${colorClass === 'border-l-blue-500' ? 'bg-blue-500/10' : colorClass === 'border-l-gray-500' ? 'bg-gray-500/10' : colorClass === 'border-l-yellow-500' ? 'bg-yellow-500/10' : 'bg-green-500/10'}`}>
+              <Icon className={`w-6 h-6 ${colorClass === 'border-l-blue-500' ? 'text-blue-600' : colorClass === 'border-l-gray-500' ? 'text-gray-600' : colorClass === 'border-l-yellow-500' ? 'text-yellow-600' : 'text-green-600'}`} />
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-foreground">{value}</p>
+              <TypographySmall className="text-muted-foreground">{label}</TypographySmall>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+
+function ActionCard({ icon: Icon, title, description, onClick, index }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+    >
+      <Card
+        className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:-translate-y-1 group"
+        onClick={onClick}
+      >
+        <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+          <div className="p-4 rounded-2xl bg-primary/5 group-hover:bg-primary/10 transition-colors">
+            <Icon className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <TypographyH3 className="mb-1">{title}</TypographyH3>
+            <TypographyP className="text-muted-foreground leading-relaxed">{description}</TypographyP>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
 
 export default function DashboardPage() {
   const { laudos } = useLaudos()
   const { currentUser } = useAuth()
+  const { collapsed } = useSidebar()
   const navigate = useNavigate()
 
   const total = laudos.length
@@ -26,81 +77,132 @@ export default function DashboardPage() {
   const concluidos = laudos.filter(l => l.status === 'concluido').length
   const arquivados = laudos.filter(l => l.status === 'arquivado').length
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  }
+
   return (
-    <div>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>Dashboard</h1>
-          <p className={styles.welcome}>Bem-vindo(a), {currentUser?.nome}.</p>
+    <motion.div
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+          <LayoutDashboard className="w-7 h-7 text-primary" />
+          <TypographyH1 className="text-2xl lg:text-3xl">
+            Dashboard
+          </TypographyH1>
         </div>
-        <button className={styles.newBtn} onClick={() => navigate('/atribuir-laudo')}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
+        <TypographyMuted className="mb-4 sm:mb-0">
+          Bem-vindo(a), <span className="font-semibold text-foreground">{currentUser?.nome}</span>
+        </TypographyMuted>
+        <motion.button
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate('/atribuir-laudo')}
+        >
+          <Plus className="w-4 h-4" />
           Novo Laudo
-        </button>
+        </motion.button>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Total de Laudos"
+          value={total}
+          colorClass="border-l-blue-500"
+          icon={FileText}
+          index={0}
+        />
+        <StatCard
+          label="Rascunhos"
+          value={rascunhos}
+          colorClass="border-l-gray-500"
+          icon={Edit}
+          index={1}
+        />
+        <StatCard
+          label="Em Análise"
+          value={emAnalise}
+          colorClass="border-l-yellow-500"
+          icon={Clock}
+          index={2}
+        />
+        <StatCard
+          label="Concluídos"
+          value={concluidos}
+          colorClass="border-l-green-500"
+          icon={Check}
+          index={3}
+        />
       </div>
 
-      <div className={styles.statsGrid}>
-        <StatCard label="Total de Laudos" value={total} color="blue" icon={
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-        } />
-        <StatCard label="Rascunhos" value={rascunhos} color="grey" icon={
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        } />
-        <StatCard label="Em Análise" value={emAnalise} color="yellow" icon={
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        } />
-        <StatCard label="Concluídos" value={concluidos} color="green" icon={
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-            <polyline points="22 4 12 14.01 9 11.01"/>
-          </svg>
-        } />
-      </div>
-
-      <div className={styles.quickActions}>
-        <h2 className={styles.subtitle}>Acesso Rápido</h2>
-        <div className={styles.actionsGrid}>
-          <button className={styles.actionCard} onClick={() => navigate('/visualizacao')}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            <span>Visualizar Laudos</span>
-            <p>Consulte todos os laudos cadastrados</p>
-          </button>
-          <button className={styles.actionCard} onClick={() => navigate('/verificar-laudos')}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 11 12 14 22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-            </svg>
-            <span>Verificar Laudos</span>
-            <p>Gerencie o status e andamento dos laudos</p>
-          </button>
-          <button className={styles.actionCard} onClick={() => navigate('/atribuir-laudo')}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="16"/>
-              <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            <span>Novo Laudo</span>
-            <p>Crie um novo laudo pericial</p>
-          </button>
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center gap-2 mb-4">
+          <TypographyH2>Acesso Rápido</TypographyH2>
         </div>
-      </div>
-    </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <ActionCard
+            icon={Eye}
+            title="Visualizar Laudos"
+            description="Consulte todos os laudos cadastrados no sistema"
+            onClick={() => navigate('/visualizacao')}
+            index={0}
+          />
+          <ActionCard
+            icon={ClipboardCheck}
+            title="Verificar Laudos"
+            description="Gerencie o status e andamento dos laudos"
+            onClick={() => navigate('/verificar-laudos')}
+            index={1}
+          />
+          <ActionCard
+            icon={Plus}
+            title="Novo Laudo"
+            description="Crie um novo laudo pericial"
+            onClick={() => navigate('/atribuir-laudo')}
+            index={2}
+          />
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardContent className="p-6">
+            <TypographyH3 className="mb-3">Resumo</TypographyH3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-foreground">{total}</p>
+                <TypographySmall className="text-muted-foreground">Total</TypographySmall>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-gray-600">{rascunhos}</p>
+                <TypographySmall className="text-muted-foreground">Rascunhos</TypographySmall>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-yellow-600">{emAnalise}</p>
+                <TypographySmall className="text-muted-foreground">Em Análise</TypographySmall>
+              </div>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">{concluidos}</p>
+                <TypographySmall className="text-muted-foreground">Concluídos</TypographySmall>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   )
 }

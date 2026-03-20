@@ -1,5 +1,6 @@
 import { useDiseases } from '../../../contexts/DiseaseContext'
 import DiseaseCard from '../DiseaseCard/DiseaseCard'
+import { Input } from '@/components/ui/Input'
 import styles from './DiseaseLibraryPanel.module.css'
 
 export default function DiseaseLibraryPanel({ selectedDiseases, onAddDisease }) {
@@ -10,7 +11,7 @@ export default function DiseaseLibraryPanel({ selectedDiseases, onAddDisease }) 
     <div className={styles.panel}>
       <div className={styles.header}>
         <h4 className={styles.title}>Biblioteca de Condições</h4>
-        <input
+        <Input
           className={styles.search}
           type="text"
           placeholder="Buscar por nome ou CID..."

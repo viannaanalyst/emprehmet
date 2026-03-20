@@ -4,7 +4,9 @@ import { StatusBadge } from '../../components/ui/Badge/Badge'
 import Modal from '../../components/ui/Modal/Modal'
 import LaudoPreview from '../../components/laudo/LaudoPreview/LaudoPreview'
 import Button from '../../components/ui/Button/Button'
-import styles from './VerificarLaudosPage.module.css'
+import { TypographyH1, TypographyMuted } from '@/components/ui/typography'
+import { motion } from 'framer-motion'
+import { ClipboardCheck } from 'lucide-react'
 
 const COLUMNS = [
   { status: 'rascunho', label: 'Rascunho' },
@@ -27,7 +29,7 @@ const STATUS_PREV = {
 export default function VerificarLaudosPage() {
   const { laudos, advanceStatus, revertStatus } = useLaudos()
   const [selectedLaudo, setSelectedLaudo] = useState(null)
-  const [confirmAction, setConfirmAction] = useState(null) // { laudo, type: 'advance' | 'revert' }
+  const [confirmAction, setConfirmAction] = useState(null)
 
   const byStatus = (status) => laudos.filter(l => l.status === status)
 
@@ -46,62 +48,106 @@ export default function VerificarLaudosPage() {
   }
 
   return (
-    <div>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Verificar Laudos</h1>
-        <p className={styles.sub}>Gerencie o andamento e status dos laudos</p>
-      </div>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="flex items-center gap-2 mb-1"
+      >
+        <ClipboardCheck className="w-7 h-7 text-primary" />
+        <TypographyH1 className="text-2xl lg:text-3xl">
+          Verificar Laudos
+        </TypographyH1>
+      </motion.div>
+      <TypographyMuted>
+        Gerencie o andamento e status dos laudos
+      </TypographyMuted>
 
-      <div className={styles.kanban}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
         {COLUMNS.map(col => {
           const items = byStatus(col.status)
           return (
-            <div key={col.status} className={styles.column}>
-              <div className={styles.colHeader}>
-                <span className={styles.colTitle}>{col.label}</span>
-                <span className={styles.colCount}>{items.length}</span>
+            <div key={col.status} className="bg-muted rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-muted-foreground/10 border-b border-border">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  {col.label}
+                </span>
+                <span className="w-6 h-6 bg-muted-foreground/30 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {items.length}
+                </span>
               </div>
-              <div className={styles.colBody}>
+              <div className="p-3 flex flex-col gap-3 min-h-[80px]">
                 {items.length === 0 && (
-                  <p className={styles.empty}>Nenhum laudo</p>
+                  <p className="text-xs text-muted-foreground/50 text-center py-4">
+                    Nenhum laudo
+                  </p>
                 )}
                 {items.map(laudo => (
-                  <div key={laudo.id} className={styles.kanbanCard}>
-                    <div className={styles.cardTop}>
-                      <span className={styles.cardNum}>{laudo.numero}</span>
+                  <motion.div
+                    key={laudo.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-card border border-border rounded p-3 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-primary font-mono">
+                        {laudo.numero}
+                      </span>
                       <StatusBadge status={laudo.status} />
                     </div>
-                    <p className={styles.cardPatient}>{laudo.paciente?.nome || '—'}</p>
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      {laudo.paciente?.nome || '—'}
+                    </p>
                     {laudo.paciente?.processo && (
-                      <p className={styles.cardProcess}>{laudo.paciente.processo}</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {laudo.paciente.processo}
+                      </p>
                     )}
-                    <p className={styles.cardDate}>
+                    <p className="text-xs text-muted-foreground/70 mb-3">
                       {laudo.criadoEm ? new Date(laudo.criadoEm).toLocaleDateString('pt-BR') : '—'}
                     </p>
-                    <div className={styles.cardActions}>
-                      <button className={styles.viewBtn} onClick={() => setSelectedLaudo(laudo)}>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        className="w-full px-3 py-2 text-xs bg-transparent border border-border rounded hover:bg-muted transition-colors"
+                        onClick={() => setSelectedLaudo(laudo)}
+                      >
                         Ver
                       </button>
                       {STATUS_NEXT[laudo.status] && (
-                        <button className={styles.advanceBtn} onClick={() => handleAdvance(laudo)}>
+                        <button
+                          className="w-full px-3 py-2 text-xs font-semibold bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                          onClick={() => handleAdvance(laudo)}
+                        >
                           {STATUS_NEXT[laudo.status]}
                         </button>
                       )}
                       {STATUS_PREV[laudo.status] && (
-                        <button className={styles.revertBtn} onClick={() => setConfirmAction({ laudo, type: 'revert' })}>
+                        <button
+                          className="w-full px-3 py-2 text-xs border border-border rounded hover:bg-muted transition-colors"
+                          onClick={() => setConfirmAction({ laudo, type: 'revert' })}
+                        >
                           {STATUS_PREV[laudo.status]}
                         </button>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
           )
         })}
-      </div>
+      </motion.div>
 
-      {/* Preview modal */}
       <Modal
         isOpen={!!selectedLaudo}
         onClose={() => setSelectedLaudo(null)}
@@ -111,28 +157,27 @@ export default function VerificarLaudosPage() {
         <LaudoPreview laudo={selectedLaudo} />
       </Modal>
 
-      {/* Confirm action modal */}
       <Modal
         isOpen={!!confirmAction}
         onClose={() => setConfirmAction(null)}
         title="Confirmar ação"
         size="sm"
       >
-        <p style={{ marginBottom: 20, fontSize: '0.9rem', color: 'var(--grey-700)', lineHeight: 1.6 }}>
+        <p className="text-sm text-muted-foreground mb-5">
           {confirmAction?.type === 'advance' && confirmAction?.laudo?.status === 'concluido'
             ? 'Deseja arquivar este laudo? Esta ação é irreversível.'
             : 'Confirma a alteração de status deste laudo?'}
         </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <Button variant="outline" onClick={() => setConfirmAction(null)}>Cancelar</Button>
+        <div className="flex justify-end gap-3">
+          <Button variant="cancel" onClick={() => setConfirmAction(null)}>Cancelar</Button>
           <Button
-            variant={confirmAction?.type === 'advance' && confirmAction?.laudo?.status === 'concluido' ? 'danger' : 'primary'}
+            variant={confirmAction?.type === 'advance' && confirmAction?.laudo?.status === 'concluido' ? 'destructive' : 'default'}
             onClick={handleConfirm}
           >
             Confirmar
           </Button>
         </div>
       </Modal>
-    </div>
+    </motion.div>
   )
 }

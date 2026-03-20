@@ -81,8 +81,8 @@ export function NotificacoesProvider({ children }) {
   }
 
   // ── Ações de notificações ──
-  function marcarLida(id) {
-    persistNotifs(notificacoes.map(n => n.id === id ? { ...n, lida: true } : n))
+  function marcarLida(id, lida = true) {
+    persistNotifs(notificacoes.map(n => n.id === id ? { ...n, lida } : n))
   }
 
   function marcarTodasLidas() {
@@ -122,6 +122,10 @@ export function NotificacoesProvider({ children }) {
     persistConfig({ ...config, ...patch })
   }
 
+  function updateConfig(patch) {
+    persistConfig({ ...config, ...patch })
+  }
+
   const naoLidas = notificacoes.filter(n => !n.lida).length
 
   return (
@@ -135,6 +139,7 @@ export function NotificacoesProvider({ children }) {
       vincularLaudo,
       simularRecebimento,
       salvarConfig,
+      updateConfig,
     }}>
       {children}
     </NotificacoesContext.Provider>

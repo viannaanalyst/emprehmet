@@ -1,10 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
   build: {
-    // Separar pdfmake e docx em chunks próprios (carregados apenas na RevisaoLaudoPage)
     rollupOptions: {
       output: {
         manualChunks: {
